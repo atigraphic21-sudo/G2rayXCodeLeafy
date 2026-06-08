@@ -1,0 +1,28 @@
+name: Keep Codespace Alive
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+  workflow_dispatch:
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake Codespace
+        run: |
+          CODESPACE_NAME=$(curl -s \
+            -H "Authorization: token ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/user/codespaces" \
+            | jq -r '.codespaces[] | select(.repository.name=="G2rayXCodeLeafy") | .name' \
+            | head -1)
+
+          echo "Codespace: $CODESPACE_NAME"
+
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.GH_PAT }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/user/codespaces/${CODESPACE_NAME}/start"
+
+          echo "Done!"
